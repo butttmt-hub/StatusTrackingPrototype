@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Visibility System · Prototype</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #FFFFFF;
+    --bg-secondary: #F7F8FA;
+    --text: #111827;
+    --text-secondary: #6B7280;
+    --border: #E5E7EB;
+    --border-light: #F3F4F6;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --green: #1D9E75;  --green-bg: #EAF3DE; --green-text: #27500A;
+    --blue: #185FA5;   --blue-bg: #E6F1FB;  --blue-text: #0C447C;
+    --amber: #BA7517;  --amber-bg: #FAEEDA; --amber-text: #633806;
+    --red: #A32D2D;    --red-bg: #FBEAEA;   --red-text: #7A1F1F;
+    --purple-bg: #EEEDFE; --purple-text: #3C3489; --purple-border: #AFA9EC;
+    --teal-bg: #E1F5EE; --teal-border: #5DCAA5; --teal-text: #085041;
+    --shadow-sm: 0 1px 2px rgba(16,24,40,.05);
+    --shadow-md: 0 4px 14px rgba(16,24,40,.08);
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Sukhumvit Set', 'Noto Sans Thai', sans-serif;
+    background: var(--bg-secondary);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.55;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Demo Navigator ── */
+  .demo-nav {
+    position: sticky; top: 0; z-index: 50;
+    background: #0E1726;
+    color: #E5E7EB;
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #1F2A3C;
+  }
+  .demo-nav .brand {
+    font-weight: 700; font-size: 13px; color: #fff;
+    display: flex; align-items: center; gap: 7px; margin-right: 10px;
+  }
+  .demo-nav .brand .logo {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: linear-gradient(135deg, var(--green), var(--blue));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #fff;
+  }
+  .demo-nav .sep { width: 1px; height: 18px; background: #2A3950; margin: 0 4px; }
+  .nav-btn {
+    background: transparent; border: 1px solid transparent;
+    color: #AEB7C4; font-size: 12.5px; padding: 6px 12px;
+    border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+    transition: .15s; white-space: nowrap;
+  }
+  .nav-btn:hover { background: #1A2536; color: #fff; }
+  .nav-btn.active { background: #fff; color: #0E1726; font-weight: 600; }
+  .demo-nav .tag {
+    margin-left: auto; font-size: 11px; color: #7E8A9A;
+    border: 1px solid #2A3950; padding: 3px 10px; border-radius: 20px;
+  }
+
+  /* ── Shared atoms ── */
+  .badge {
+    font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 600;
+    white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;
+  }
+  .b-blue { background: var(--blue-bg); color: var(--blue-text); }
+  .b-green { background: var(--green-bg); color: var(--green-text); }
+  .b-amber { background: var(--amber-bg); color: var(--amber-text); }
+  .b-red { background: var(--red-bg); color: var(--red-text); }
+  .b-gray { background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border); }
+
+  .btn {
+    font-size: 13px; padding: 8px 14px; border-radius: var(--radius-md);
+    border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary);
+    cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: .15s;
+  }
+  .btn:hover { background: var(--bg-secondary); }
+  .btn-green { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn-green:hover { opacity: .9; background: var(--green); }
+  .btn-teal { background: var(--teal-bg); border-color: var(--teal-border); color: var(--teal-text); }
+  .btn-blue { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .btn-blue:hover { opacity:.9; background: var(--blue); }
+  .btn-red-o { background: var(--bg); border-color: var(--red); color: var(--red); }
+
+  .card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+  .page { max-width: 1180px; margin: 0 auto; padding: 22px 22px 60px; }
+
+  /* ── Dashboard ── */
+  .dash-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; flex-wrap: wrap; }
+  .dash-title { font-size: 19px; font-weight: 700; display: flex; align-items: center; gap: 9px; }
+  .dash-title small { font-weight: 400; color: var(--text-secondary); font-size: 13px; }
+  .op-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--blue-bg); color: var(--blue-text); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+  .head-right { display: flex; align-items: center; gap: 12px; }
+  .head-date { font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 18px; }
+  .sum-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; box-shadow: var(--shadow-sm); }
+  .sum-card .lbl { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+  .sum-card .num { font-size: 26px; font-weight: 700; margin-top: 6px; }
+  .sum-card.c-blue { border-left: 3px solid var(--blue); }
+  .sum-card.c-green { border-left: 3px solid var(--green); }
+  .sum-card.c-amber { border-left: 3px solid var(--amber); }
+  .sum-card.c-red { border-left: 3px solid var(--red); }
+  .n-blue { color: var(--blue); } .n-green { color: var(--green); } .n-amber { color: var(--amber); } .n-red { color: var(--red); }
+
+  .dash-grid { display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: start; }
+
+  .filter-tabs { display: flex; gap: 6px; padding: 12px 14px 0; flex-wrap: wrap; }
+  .f-tab { font-size: 13px; padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary); cursor: pointer; transition: .15s; }
+  .f-tab:hover { background: var(--bg-secondary); }
+  .f-tab.active { background: var(--text); color: #fff; border-color: var(--text); font-weight: 600; }
+
+  table.orders { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  table.orders th { text-align: left; font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .03em; padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  table.orders td { padding: 12px; border-bottom: 1px solid var(--border-light); font-size: 13px; vertical-align: middle; }
+  table.orders tr:last-child td { border-bottom: none; }
+  table.orders tbody tr { cursor: pointer; transition: background .12s; }
+  table.orders tbody tr:hover { background: var(--bg-secondary); }
+  .oid { font-weight: 700; color: var(--text); }
+  .drv { font-weight: 600; } .drv-phone { font-size: 11.5px; color: var(--text-secondary); }
+  .plate-badge { font-size: 11.5px; background: var(--purple-bg); color: var(--purple-text); border: 1px solid var(--purple-border); padding: 2px 8px; border-radius: 5px; font-weight: 600; white-space: nowrap; }
+  .dots { display: flex; gap: 4px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .d-done { background: var(--green); } .d-active { background: #378ADD; box-shadow: 0 0 0 3px rgba(55,138,221,.18); } .d-wait { background: var(--border); }
+  .mini-bar { height: 6px; background: var(--border-light); border-radius: 20px; overflow: hidden; width: 90px; }
+  .mini-bar > i { display: block; height: 100%; border-radius: 20px; }
+  .mb-blue > i { background: var(--blue); } .mb-green > i { background: var(--green); } .mb-amber > i { background: var(--amber); } .mb-gray > i { background: var(--text-secondary); }
+  .pct { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+  .btn-sm { font-size: 12.5px; padding: 6px 12px; }
+
+  .side-card { margin-bottom: 16px; }
+  .side-card .sc-head { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
+  .side-card .sc-body { padding: 6px 6px; }
+  .alert-row { display: flex; gap: 10px; padding: 10px 10px; border-radius: var(--radius-md); align-items: flex-start; }
+  .alert-row:hover { background: var(--bg-secondary); cursor: pointer; }
+  .alert-ico { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ai-amber { background: var(--amber-bg); color: var(--amber); } .ai-red { background: var(--red-bg); color: var(--red); } .ai-blue { background: var(--blue-bg); color: var(--blue); }
+  .alert-row .t { font-size: 12.5px; font-weight: 600; } .alert-row .s { font-size: 11.5px; color: var(--text-secondary); }
+  .feed-row { display: flex; gap: 10px; padding: 9px 10px; align-items: flex-start; }
+  .feed-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+  .feed-row .t { font-size: 12.5px; } .feed-row .tm { font-size: 11px; color: var(--text-secondary); }
+
+  /* ── Top bar (detail/pod/track) ── */
+  .top-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 22px; background: var(--bg); border-bottom: 1px solid var(--border); position: sticky; top: 41px; z-index: 20; }
+  .back-btn { display: flex; align-items: center; gap: 6px; font-size: 13.5px; color: var(--text-secondary); cursor: pointer; background: none; border: none; padding: 6px 10px; border-radius: var(--radius-md); }
+  .back-btn:hover { background: var(--bg-secondary); }
+  .top-actions { display: flex; gap: 8px; }
+  .content { max-width: 880px; margin: 0 auto; padding: 0 22px 50px; }
+
+  /* ── Order header / meta / summary ── */
+  .order-header { padding: 18px 0 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border); }
+  .order-title { font-size: 21px; font-weight: 700; margin-bottom: 6px; }
+  .order-meta { display: flex; flex-wrap: wrap; gap: 12px; }
+  .meta-item { font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
+  .summary-bar { display: flex; margin: 16px 0; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; background: var(--bg); }
+  .sum-item { flex: 1; padding: 12px 16px; border-right: 1px solid var(--border); }
+  .sum-item:last-child { border-right: none; }
+  .sum-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+  .sum-value { font-size: 15px; font-weight: 700; }
+
+  /* driver card */
+  .driver-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px; }
+  .dc-head { padding: 10px 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+  .dc-body { padding: 14px 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .d-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--blue-bg); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: var(--blue-text); flex-shrink: 0; border: 1px solid #85B7EB; }
+  .d-info { flex: 1; min-width: 150px; }
+  .d-name { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .d-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 12px; padding: 3px 10px; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 5px; }
+  .tag-plate { background: var(--purple-bg); color: var(--purple-text); border: 1px solid var(--purple-border); font-weight: 600; }
+  .tag-phone { background: var(--teal-bg); color: var(--teal-text); border: 1px solid var(--teal-border); }
+  .d-actions { display: flex; gap: 8px; }
+
+  /* progress */
+  .progress-wrap { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 16px; margin-bottom: 16px; }
+  .progress-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; display: flex; justify-content: space-between; }
+  .stop-bar { display: flex; align-items: flex-start; }
+  .stop-node { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .stop-dot { width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid transparent; }
+  .dot-done { background: var(--green); border-color: var(--green); }
+  .dot-active { background: #378ADD; border-color: #378ADD; box-shadow: 0 0 0 4px rgba(55,138,221,.2); }
+  .dot-wait { background: var(--bg); border-color: var(--border); }
+  .stop-lbl { font-size: 10px; color: var(--text-secondary); white-space: nowrap; }
+  .stop-lbl.active { color: var(--blue); font-weight: 700; }
+  .stop-line { flex: 1; height: 2px; margin-top: 7px; min-width: 14px; }
+  .line-done { background: var(--green); } .line-wait { background: var(--border); }
+
+  .section { margin-bottom: 22px; }
+  .sec-title { font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
+
+  /* stop cards */
+  .stop-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 12px; }
+  .stop-header { padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--bg-secondary); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .stop-num { display: flex; align-items: center; gap: 10px; }
+  .num-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .nc-done { background: var(--green-bg); color: var(--green-text); }
+  .nc-active { background: var(--blue-bg); color: var(--blue-text); }
+  .nc-wait { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); }
+  .stop-name-txt { font-size: 14px; font-weight: 700; }
+  .stop-addr { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
+  .stop-body { padding: 14px 16px; }
+  .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; }
+  .info-item .label { font-size: 11px; color: var(--text-secondary); margin-bottom: 3px; }
+  .info-item .value { font-size: 13px; font-weight: 700; }
+  .v-green { color: var(--green); } .v-blue { color: var(--blue); } .v-gray { color: var(--text-secondary); }
+  .divider { border-top: 1px solid var(--border); margin: 12px 0; }
+
+  .tl { display: flex; flex-direction: column; }
+  .tl-row { display: flex; gap: 12px; align-items: flex-start; }
+  .tl-left { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .tl-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 4px; }
+  .tl-line { width: 1px; flex: 1; min-height: 22px; margin: 3px 0; }
+  .td-done { background: var(--green); } .td-active { background: #378ADD; } .td-wait { background: var(--border); }
+  .tl-done { background: var(--green); } .tl-wait { background: var(--border); }
+  .tl-content { padding-bottom: 14px; flex: 1; }
+  .tl-title { font-size: 13px; font-weight: 600; }
+  .tl-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .geo-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; padding: 1px 7px; border-radius: 20px; background: var(--blue-bg); color: var(--blue-text); border: 1px solid #85B7EB; margin-left: 6px; font-weight: 600; }
+  .tag-late { background: var(--amber-bg); color: var(--amber-text); border: 1px solid #E3B66A; }
+
+  /* notif */
+  .notif-log { display: flex; flex-direction: column; gap: 8px; }
+  .notif-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg); border: 1px solid var(--border); }
+  .notif-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .notif-text { flex: 1; } .notif-text .t { font-size: 13px; font-weight: 600; } .notif-text .s { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .notif-time { font-size: 11px; color: var(--text-secondary); flex-shrink: 0; padding-top: 2px; }
+  .privacy-note { font-size: 11.5px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; margin-bottom: 10px; padding: 8px 12px; background: var(--purple-bg); color: var(--purple-text); border-radius: var(--radius-md); border: 1px solid var(--purple-border); }
+
+  /* ── POD ── */
+  .pod-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 14px; }
+  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0; }
+  .photo-ph { aspect-ratio: 4/3; border-radius: var(--radius-md); background: linear-gradient(135deg, #EFF1F4, #E2E6EC); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-secondary); font-size: 11px; }
+  .photo-ph i { font-size: 22px; opacity: .5; }
+  .verify-box { display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-radius: var(--radius-md); background: var(--green-bg); border: 1px solid #9FCF7A; }
+  .verify-box.otp { background: var(--blue-bg); border-color: #85B7EB; }
+  .verify-ico { width: 40px; height: 40px; border-radius: 10px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--green); flex-shrink: 0; }
+  .verify-box.otp .verify-ico { color: var(--blue); }
+  .verify-box .vt { font-size: 13px; font-weight: 700; } .verify-box .vs { font-size: 12px; color: var(--text-secondary); }
+
+  /* ── Customer Tracking ── */
+  .track-wrap { max-width: 460px; margin: 0 auto; padding: 18px 16px 50px; }
+  .track-map { height: 230px; border-radius: var(--radius-xl); overflow: hidden; position: relative; background:
+    radial-gradient(circle at 30% 30%, #DCEFE6, transparent 60%),
+    linear-gradient(160deg, #E8F4EE 0%, #DCEEE6 100%);
+    border: 1px solid var(--teal-border); }
+  .map-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(29,158,117,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(29,158,117,.08) 1px, transparent 1px); background-size: 28px 28px; }
+  .map-route { position: absolute; left: 18%; top: 70%; width: 60%; height: 0; border-top: 3px dashed var(--green); transform: rotate(-30deg); transform-origin: left center; opacity: .65; }
+  .map-truck { position: absolute; left: 16%; top: 72%; width: 38px; height: 38px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(24,95,165,.4); animation: bob 2.2s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  .map-pin { position: absolute; right: 18%; top: 22%; display: flex; flex-direction: column; align-items: center; }
+  .map-pin .pin { width: 34px; height: 34px; border-radius: 50% 50% 50% 0; background: var(--red); transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(163,45,45,.35); }
+  .map-pin .pin i { transform: rotate(45deg); color: #fff; font-size: 16px; }
+  .map-pin .pin-lbl { margin-top: 8px; font-size: 11px; font-weight: 700; background: #fff; padding: 2px 8px; border-radius: 12px; box-shadow: var(--shadow-sm); white-space: nowrap; }
+  .live-badge { position: absolute; top: 12px; left: 12px; background: #fff; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--green); display: flex; align-items: center; gap: 5px; box-shadow: var(--shadow-sm); }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 1.4s infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(29,158,117,.5); } 70% { box-shadow: 0 0 0 7px rgba(29,158,117,0); } 100% { box-shadow: 0 0 0 0 rgba(29,158,117,0); } }
+  .eta-big { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 22px; text-align: center; margin: 16px 0; box-shadow: var(--shadow-sm); }
+  .eta-big .lbl { font-size: 13px; color: var(--text-secondary); }
+  .eta-big .num { font-size: 46px; font-weight: 800; color: var(--blue); line-height: 1.1; margin: 4px 0; }
+  .eta-big .sub { font-size: 13px; color: var(--text-secondary); }
+  .track-banner { background: var(--green-bg); border: 1px solid #9FCF7A; color: var(--green-text); border-radius: var(--radius-md); padding: 12px 14px; font-size: 13px; display: flex; align-items: center; gap: 9px; margin-bottom: 16px; }
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step-row { display: flex; gap: 12px; }
+  .step-l { display: flex; flex-direction: column; align-items: center; }
+  .step-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+  .sd-done { background: var(--green); color: #fff; } .sd-active { background: var(--blue); color: #fff; box-shadow: 0 0 0 4px rgba(24,95,165,.18); } .sd-wait { background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border); }
+  .step-line { width: 2px; flex: 1; min-height: 26px; }
+  .sl-done { background: var(--green); } .sl-wait { background: var(--border); }
+  .step-c { padding-bottom: 18px; } .step-c .t { font-size: 14px; font-weight: 600; } .step-c.active .t { color: var(--blue); } .step-c.wait .t { color: var(--text-secondary); } .step-c .s { font-size: 12px; color: var(--text-secondary); }
+
+  /* ── Driver App ── */
+  .driver-stage { display: flex; flex-direction: column; align-items: center; padding: 24px 16px 60px; }
+  .phone { width: 390px; max-width: 100%; background: #000; border-radius: 42px; padding: 11px; box-shadow: 0 20px 50px rgba(0,0,0,.28); }
+  .phone-screen { background: var(--bg-secondary); border-radius: 32px; overflow: hidden; height: 740px; display: flex; flex-direction: column; position: relative; }
+  .ph-status { height: 30px; display: flex; align-items: center; justify-content: space-between; padding: 0 22px; font-size: 12px; font-weight: 600; color: var(--text); background: var(--bg); }
+  .ph-top { padding: 12px 16px; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .ph-top .title { font-size: 15px; font-weight: 700; }
+  .ph-top .step-pill { font-size: 11px; color: var(--text-secondary); background: var(--bg-secondary); padding: 3px 9px; border-radius: 20px; }
+  .ph-body { flex: 1; overflow-y: auto; padding: 16px; }
+  .ph-foot { padding: 12px 16px; background: var(--bg); border-top: 1px solid var(--border); display: flex; gap: 8px; }
+  .ph-foot .btn { flex: 1; justify-content: center; }
+  .ph-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 12px; }
+  .ph-greet { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
+  .ph-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; }
+  .ph-photo-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .ph-photo { aspect-ratio: 1; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .pp-done { background: var(--green-bg); color: var(--green); } .pp-add { background: var(--bg-secondary); color: var(--text-secondary); border: 1.5px dashed var(--border); }
+  .ph-stop { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
+  .ph-stop:last-child { border-bottom: none; }
+  .ph-stop .n { width: 24px; height: 24px; border-radius: 50%; background: var(--bg-secondary); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); }
+  .ph-mini-map { height: 150px; border-radius: var(--radius-lg); background: radial-gradient(circle at 40% 30%, #DCEFE6, transparent 60%), linear-gradient(160deg,#E8F4EE,#DCEEE6); border: 1px solid var(--teal-border); position: relative; margin-bottom: 12px; overflow: hidden; }
+  .otp-box { text-align: center; padding: 18px; background: var(--blue-bg); border: 1px solid #85B7EB; border-radius: var(--radius-lg); margin-bottom: 12px; }
+  .otp-box .lbl { font-size: 12px; color: var(--blue-text); }
+  .otp-box .code { font-size: 36px; font-weight: 800; letter-spacing: .14em; color: var(--blue); margin-top: 4px; }
+  .ph-eta { display: flex; gap: 12px; margin-bottom: 12px; }
+  .ph-eta .e { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; text-align: center; }
+  .ph-eta .e .l { font-size: 11px; color: var(--text-secondary); } .ph-eta .e .v { font-size: 20px; font-weight: 800; color: var(--blue); }
+
+  .info-callout { font-size: 12.5px; color: var(--text-secondary); padding: 10px 14px; background: var(--bg); border: 1px dashed var(--border); border-radius: var(--radius-md); display: flex; gap: 8px; align-items: flex-start; margin-bottom: 16px; }
+
+  @media (max-width: 920px) {
+    .summary-grid { grid-template-columns: repeat(2,1fr); }
+    .dash-grid { grid-template-columns: 1fr; }
+    .table-scroll { overflow-x: auto; }
+    table.orders { min-width: 720px; }
+  }
+  @media (max-width: 520px) { .info-grid { grid-template-columns: 1fr 1fr; } .summary-bar { flex-wrap: wrap; } .sum-item { min-width: 50%; } }
+</style>
+</head>
+<body>
+
+<div class="demo-nav">
+  <div class="brand"><span class="logo"><i class="ti ti-route"></i></span> Customer Visibility System</div>
+  <button class="nav-btn" id="nav-ops" onclick="go('dashboard')"><i class="ti ti-layout-dashboard"></i> Ops Dashboard</button>
+  <button class="nav-btn" id="nav-driver" onclick="go('driver')"><i class="ti ti-device-mobile"></i> Driver App</button>
+  <button class="nav-btn" id="nav-track" onclick="go('track','A2024')"><i class="ti ti-map-pin"></i> มุมมองลูกค้า</button>
+  <span class="tag">Prototype · Mock data</span>
+</div>
+
+<div id="app"></div>
+
+<script>
+/* ════════════════ CENTRAL MOCK DATA STORE ════════════════ */
+const mockOrders = [
+  {
+    id:"A2024", status:"กำลังส่ง", statusCode:"active", date:"10 มิ.ย. 2026",
+    driver:{name:"สมชาย กิตติพงษ์", shortName:"สมชาย ก.", avatar:"สม", phone:"081-234-5678", plate:"กข 1234 กทม.", experience:"5 ปี"},
+    totalStops:3, currentStop:2, progress:67, departTime:"09:10",
+    stops:[
+      {stopNumber:1, name:"ร้านสยามเทรดดิ้ง", address:"123/4 ถ.พระราม 4 กรุงเทพฯ", contact:"สมหมาย ว.", status:"done", arrivalTime:"10:52", completedTime:"11:05", eta:null, distanceKm:null,
+       timeline:[{status:"done",text:"ระบบแจ้งลูกค้า 'รถเข้า 10 กม.'",tag:"Geofence",time:"10:40"},{status:"done",text:"คนขับถึงร้าน",tag:null,time:"10:52"},{status:"done",text:"ถ่ายรูป POD ครบ 3 รูป",tag:null,time:"10:53–11:04"},{status:"done",text:"ลูกค้าลงลายเซ็น · ปิด Stop",tag:null,time:"11:05"}],
+       pod:{photos:3, verification:"ลายเซ็น", verifiedAt:"11:05"}},
+      {stopNumber:2, name:"ร้านลาดพร้าวซัพพลาย", address:"56 ถ.ลาดพร้าว 71 กรุงเทพฯ", contact:"นภา ท.", status:"active", arrivalTime:null, completedTime:null, eta:"14:30", distanceKm:8,
+       timeline:[{status:"done",text:"ระบบแจ้งลูกค้า 'รถเข้า 10 กม.'",tag:"Geofence",time:"13:55"},{status:"active",text:"รถกำลังเดินทาง · คาดถึง 14:30",tag:null,time:null},{status:"wait",text:"ส่งของ + เก็บ POD",tag:null,time:null},{status:"wait",text:"ปิด Stop",tag:null,time:null}],
+       pod:null},
+      {stopNumber:3, name:"ร้านออนนุชมาร์ท", address:"88 ถ.สุขุมวิท 77 กรุงเทพฯ", contact:"วราภรณ์ ส.", status:"waiting", arrivalTime:null, completedTime:null, eta:"~16:00", distanceKm:null,
+       timeline:[{status:"done",text:"แจ้งล่วงหน้า 1 วัน · ลูกค้า Confirm แล้ว",tag:null,time:"เมื่อวาน"},{status:"wait",text:"รอ Geofence 10 กม.",tag:null,time:null},{status:"wait",text:"รอส่งของ",tag:null,time:null}],
+       pod:null}
+    ],
+    notifications:[
+      {icon:"🔔",text:"Stop 2 · แจ้ง 'รถเข้า 10 กม.' · ร้านลาดพร้าวซัพพลาย",channel:"Line",time:"13:55"},
+      {icon:"✅",text:"Stop 1 · แจ้ง 'ส่งสำเร็จ' · ร้านสยามเทรดดิ้ง",channel:"Line",time:"11:05"},
+      {icon:"🔔",text:"Stop 1 · แจ้ง 'รถเข้า 10 กม.' · ร้านสยามเทรดดิ้ง",channel:"Line",time:"10:40"},
+      {icon:"🚚",text:"แจ้งทุกร้าน 'รถออกจากคลังแล้ว'",channel:"Line",time:"09:10"}
+    ]
+  },
+  {
+    id:"A2025", status:"รถช้า", statusCode:"warning", date:"10 มิ.ย. 2026",
+    driver:{name:"วิชัย รัตนมงคล", shortName:"วิชัย ร.", avatar:"วิ", phone:"089-876-5432", plate:"งง 5678 นบ.", experience:"3 ปี"},
+    totalStops:1, currentStop:1, progress:30, departTime:"10:00",
+    stops:[
+      {stopNumber:1, name:"ร้านรามคำแหงซัพพลาย", address:"99/9 ถ.รามคำแหง กรุงเทพฯ", contact:"ธนกร ม.", status:"active", arrivalTime:null, completedTime:null, eta:"15:10", distanceKm:18,
+       timeline:[{status:"done",text:"แจ้งล่วงหน้า 1 วัน · ลูกค้า Confirm แล้ว",tag:null,time:"เมื่อวาน"},{status:"done",text:"รถออกจากคลัง",tag:null,time:"10:00"},{status:"active",text:"ติดรถติด · ETA เลื่อนเป็น 15:10 (+40 นาที)",tag:"ล่าช้า",time:"13:42"},{status:"wait",text:"รอ Geofence 10 กม.",tag:null,time:null},{status:"wait",text:"รอส่งของ",tag:null,time:null}],
+       pod:null}
+    ],
+    notifications:[
+      {icon:"⚠️",text:"Stop 1 · แจ้งลูกค้า 'รถล่าช้า ETA ใหม่ 15:10'",channel:"Line",time:"13:42"},
+      {icon:"🚚",text:"แจ้งทุกร้าน 'รถออกจากคลังแล้ว'",channel:"Line",time:"10:00"}
+    ]
+  },
+  {
+    id:"A2021", status:"ส่งสำเร็จ", statusCode:"done", date:"10 มิ.ย. 2026",
+    driver:{name:"ประสิทธิ์ นาคสุวรรณ", shortName:"ประสิทธิ์ น.", avatar:"ปร", phone:"062-111-2233", plate:"ชช 9012 สป.", experience:"7 ปี"},
+    totalStops:2, currentStop:2, progress:100, departTime:"09:00",
+    stops:[
+      {stopNumber:1, name:"ร้านสยามเทรดดิ้ง", address:"123/4 ถ.พระราม 4 กรุงเทพฯ", contact:"สมหมาย ว.", status:"done", arrivalTime:"10:52", completedTime:"11:05", eta:null, distanceKm:null,
+       timeline:[{status:"done",text:"ระบบแจ้งลูกค้า 'รถเข้า 10 กม.'",tag:"Geofence",time:"10:40"},{status:"done",text:"คนขับถึงร้าน",tag:null,time:"10:52"},{status:"done",text:"ถ่ายรูป POD ครบ 3 รูป",tag:null,time:"10:53–11:04"},{status:"done",text:"ลูกค้าลงลายเซ็น · ปิด Stop",tag:null,time:"11:05"}],
+       pod:{photos:3, verification:"ลายเซ็น", verifiedAt:"11:05"}},
+      {stopNumber:2, name:"ร้านลาดพร้าวซัพพลาย", address:"56 ถ.ลาดพร้าว 71 กรุงเทพฯ", contact:"นภา ท.", status:"done", arrivalTime:"12:30", completedTime:"12:45", eta:null, distanceKm:null,
+       timeline:[{status:"done",text:"ระบบแจ้งลูกค้า 'รถเข้า 10 กม.'",tag:"Geofence",time:"12:18"},{status:"done",text:"คนขับถึงร้าน",tag:null,time:"12:30"},{status:"done",text:"ถ่ายรูป POD ครบ 2 รูป",tag:null,time:"12:31–12:44"},{status:"done",text:"ลูกค้ายืนยัน OTP · ปิด Stop",tag:null,time:"12:45"}],
+       pod:{photos:2, verification:"OTP", verifiedAt:"12:45"}}
+    ],
+    notifications:[
+      {icon:"✅",text:"Stop 2 · แจ้ง 'ส่งสำเร็จ' · ร้านลาดพร้าวซัพพลาย",channel:"Line",time:"12:45"},
+      {icon:"🔔",text:"Stop 2 · แจ้ง 'รถเข้า 10 กม.' · ร้านลาดพร้าวซัพพลาย",channel:"Line",time:"12:18"},
+      {icon:"✅",text:"Stop 1 · แจ้ง 'ส่งสำเร็จ' · ร้านสยามเทรดดิ้ง",channel:"Line",time:"11:05"},
+      {icon:"🔔",text:"Stop 1 · แจ้ง 'รถเข้า 10 กม.' · ร้านสยามเทรดดิ้ง",channel:"Line",time:"10:40"},
+      {icon:"🚚",text:"แจ้งทุกร้าน 'รถออกจากคลังแล้ว'",channel:"Line",time:"09:00"}
+    ]
+  },
+  {
+    id:"A2026", status:"รอออก", statusCode:"pending", date:"10 มิ.ย. 2026",
+    driver:{name:"มานิต สุขสบาย", shortName:"มานิต ส.", avatar:"มา", phone:"091-555-6677", plate:"ดด 3456 กทม.", experience:"2 ปี"},
+    totalStops:2, currentStop:0, progress:0, departTime:null,
+    stops:[
+      {stopNumber:1, name:"ร้านออนนุชมาร์ท", address:"88 ถ.สุขุมวิท 77 กรุงเทพฯ", contact:"วราภรณ์ ส.", status:"waiting", arrivalTime:null, completedTime:null, eta:"~13:00", distanceKm:null,
+       timeline:[{status:"done",text:"แจ้งล่วงหน้า 1 วัน · ลูกค้า Confirm แล้ว",tag:null,time:"เมื่อวาน"},{status:"wait",text:"รอรถออกจากคลัง",tag:null,time:null}],
+       pod:null},
+      {stopNumber:2, name:"ร้านมีนบุรีโฮม", address:"45/2 ถ.รามคำแหง 150 กรุงเทพฯ", contact:"อนุชา ก.", status:"waiting", arrivalTime:null, completedTime:null, eta:"~15:00", distanceKm:null,
+       timeline:[{status:"done",text:"แจ้งล่วงหน้า 1 วัน · ลูกค้า Confirm แล้ว",tag:null,time:"เมื่อวาน"},{status:"wait",text:"รอรถออกจากคลัง",tag:null,time:null}],
+       pod:null}
+    ],
+    notifications:[
+      {icon:"📋",text:"แจ้งล่วงหน้า 1 วัน · ร้านออนนุชมาร์ท",channel:"Line",time:"เมื่อวาน"},
+      {icon:"📋",text:"แจ้งล่วงหน้า 1 วัน · ร้านมีนบุรีโฮม",channel:"Line",time:"เมื่อวาน"}
+    ]
+  }
+];
+
+/* ════════════════ STATE & ROUTER ════════════════ */
+let state = { view:"dashboard", orderId:null, filter:"all", driverScreen:1 };
+const getOrder = id => mockOrders.find(o => o.id === id);
+const activeStop = o => o.stops.find(s => s.status === "active");
+const stopStatusToDot = s => s === "done" ? "d-done" : s === "active" ? "d-active" : "d-wait";
+const codeToBadge = { active:"b-blue", warning:"b-amber", done:"b-green", pending:"b-gray" };
+const codeToIcon = { active:"ti-truck", warning:"ti-alert-triangle", done:"ti-circle-check", pending:"ti-clock" };
+
+function go(view, orderId){ state.view = view; if(orderId) state.orderId = orderId; if(view==="driver") state.driverScreen=1; window.scrollTo(0,0); render(); }
+function setFilter(f){ state.filter = f; render(); }
+function driverNav(n){ state.driverScreen = Math.max(1, Math.min(5, n)); render(); }
+
+function setNavActive(){
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  const map={dashboard:"nav-ops",detail:"nav-ops",pod:"nav-ops",driver:"nav-driver",track:"nav-track"};
+  const el=document.getElementById(map[state.view]); if(el) el.classList.add("active");
+}
+
+/* ════════════════ DASHBOARD ════════════════ */
+function renderDashboard(){
+  const filtered = mockOrders.filter(o=>{
+    if(state.filter==="all") return true;
+    if(state.filter==="active") return o.statusCode==="active";
+    if(state.filter==="problem") return o.statusCode==="warning";
+    if(state.filter==="done") return o.statusCode==="done";
+    return true;
+  });
+  const tabs=[["all","ทั้งหมด"],["active","กำลังส่ง"],["problem","มีปัญหา"],["done","เสร็จแล้ว"]];
+
+  const rows = filtered.map(o=>{
+    const dots = o.stops.map(s=>`<span class="dot ${stopStatusToDot(s.status)}"></span>`).join("");
+    const as = activeStop(o);
+    const eta = as ? as.eta : (o.statusCode==="done" ? "—" : (o.statusCode==="pending" ? "รอออก" : "—"));
+    const mbClass = o.statusCode==="active"?"mb-blue":o.statusCode==="warning"?"mb-amber":o.statusCode==="done"?"mb-green":"mb-gray";
+    return `<tr onclick="go('detail','${o.id}')">
+      <td><span class="oid">#${o.id}</span></td>
+      <td><div class="drv">${o.driver.shortName}</div><div class="drv-phone">${o.driver.phone}</div></td>
+      <td><span class="plate-badge">${o.driver.plate}</span></td>
+      <td><div class="dots">${dots}</div></td>
+      <td><span class="badge ${codeToBadge[o.statusCode]}"><i class="ti ${codeToIcon[o.statusCode]}"></i> ${o.status}</span></td>
+      <td><b>${eta}</b></td>
+      <td><div class="mini-bar ${mbClass}"><i style="width:${o.progress}%"></i></div><div class="pct">${o.progress}%</div></td>
+      <td><button class="btn btn-sm" onclick="event.stopPropagation();go('detail','${o.id}')">ดู <i class="ti ti-chevron-right"></i></button></td>
+    </tr>`;
+  }).join("");
+
+  const alerts=[
+    {ico:"ai-amber",icon:"ti-alert-triangle",t:"วิชัย ร. รายงานรถติดหนัก",s:"Order #A2025 · ETA เลื่อน 15:10",go:"go('detail','A2025')"},
+    {ico:"ai-red",icon:"ti-map-pin-off",t:"พิกัดร้านอาจผิด",s:"Order #A2023 · รอ Ops ตรวจสอบ",go:""},
+    {ico:"ai-blue",icon:"ti-map-pin-plus",t:"ร้านใหม่รอปักหมุด",s:"Order #A2027 · ร้านครั้งเดียว",go:""}
+  ].map(a=>`<div class="alert-row" ${a.go?`onclick="${a.go}"`:""}><div class="alert-ico ${a.ico}"><i class="ti ${a.icon}"></i></div><div><div class="t">${a.t}</div><div class="s">${a.s}</div></div></div>`).join("");
+
+  const feed=[
+    {c:"var(--green)",t:"Stop 2 ของ #A2021 ส่งสำเร็จ · ยืนยัน OTP",tm:"12:45"},
+    {c:"#378ADD",t:"#A2024 แจ้งลูกค้า 'รถเข้า 10 กม.' ร้านลาดพร้าว",tm:"13:55"},
+    {c:"var(--amber)",t:"#A2025 แจ้ง 'รถล่าช้า' ETA ใหม่ 15:10",tm:"13:42"},
+    {c:"var(--green)",t:"Stop 1 ของ #A2024 ส่งสำเร็จ · ลายเซ็น",tm:"11:05"},
+    {c:"#378ADD",t:"#A2024 รถออกจากคลัง · แจ้งทุกร้าน",tm:"09:10"}
+  ].map(f=>`<div class="feed-row"><span class="feed-dot" style="background:${f.c}"></span><div><div class="t">${f.t}</div><div class="tm">${f.tm} น.</div></div></div>`).join("");
+
+  return `<div class="page">
+    <div class="dash-head">
+      <div class="dash-title"><i class="ti ti-layout-dashboard" style="color:var(--blue)"></i> Customer Visibility · Ops Dashboard <small>ภาพรวมงานขนส่งวันนี้</small></div>
+      <div class="head-right">
+        <div class="head-date"><i class="ti ti-calendar"></i> 10 มิ.ย. 2026</div>
+        <div class="op-avatar">OP</div>
+      </div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="sum-card c-blue"><div class="lbl"><i class="ti ti-package"></i> งานทั้งหมด</div><div class="num n-blue">24</div></div>
+      <div class="sum-card c-green"><div class="lbl"><i class="ti ti-circle-check"></i> ส่งสำเร็จ</div><div class="num n-green">17</div></div>
+      <div class="sum-card c-blue"><div class="lbl"><i class="ti ti-truck"></i> กำลังส่ง</div><div class="num n-blue">5</div></div>
+      <div class="sum-card c-amber"><div class="lbl"><i class="ti ti-alert-triangle"></i> มีปัญหา</div><div class="num n-amber">2</div></div>
+      <div class="sum-card c-red"><div class="lbl"><i class="ti ti-circle-x"></i> ส่งไม่ได้</div><div class="num n-red">0</div></div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="card">
+        <div class="filter-tabs">
+          ${tabs.map(t=>`<button class="f-tab ${state.filter===t[0]?'active':''}" onclick="setFilter('${t[0]}')">${t[1]}</button>`).join("")}
+        </div>
+        <div class="table-scroll">
+        <table class="orders">
+          <thead><tr>
+            <th>Order</th><th>คนขับ + เบอร์</th><th>ทะเบียน</th><th>Stops</th><th>สถานะ</th><th>ETA</th><th>Progress</th><th></th>
+          </tr></thead>
+          <tbody>${rows || `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-secondary)">ไม่มีงานในหมวดนี้</td></tr>`}</tbody>
+        </table>
+        </div>
+      </div>
+
+      <div>
+        <div class="card side-card">
+          <div class="sc-head"><i class="ti ti-alert-circle" style="color:var(--amber)"></i> ต้องดำเนินการ</div>
+          <div class="sc-body">${alerts}</div>
+        </div>
+        <div class="card side-card">
+          <div class="sc-head"><i class="ti ti-activity" style="color:var(--blue)"></i> Activity ล่าสุด</div>
+          <div class="sc-body">${feed}</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ════════════════ ORDER DETAIL ════════════════ */
+function renderDetail(){
+  const o = getOrder(state.orderId); if(!o) return renderDashboard();
+  const hasPOD = o.stops.some(s=>s.pod);
+
+  // summary bar
+  const sumItems = [`<div class="sum-item"><div class="sum-label">ออกจากคลัง</div><div class="sum-value">${o.departTime || "ยังไม่ออก"}</div></div>`];
+  o.stops.forEach(s=>{
+    let v, color="";
+    if(s.status==="done"){ v="✓ "+s.completedTime; color="var(--green)"; }
+    else if(s.status==="active"){ v=s.eta; color="var(--blue)"; }
+    else { v=s.eta||"—"; color="var(--text-secondary)"; }
+    sumItems.push(`<div class="sum-item"><div class="sum-label">Stop ${s.stopNumber} ${s.status==="done"?"":"ETA"}</div><div class="sum-value" style="color:${color}">${v}</div></div>`);
+  });
+
+  // progress bar (warehouse + stops + finish)
+  let nodes = [`<div class="stop-node"><div class="stop-dot ${o.departTime?'dot-done':'dot-wait'}"></div><div class="stop-lbl">คลัง</div></div>`];
+  o.stops.forEach(s=>{
+    const dotc = s.status==="done"?"dot-done":s.status==="active"?"dot-active":"dot-wait";
+    const linec = (o.stops.findIndex(x=>x===s)===0 ? (o.departTime?'line-done':'line-wait') : '');
+    nodes.push(`<div class="stop-line ${s.status==="done"||s.status==="active"? (s.status==="done"?'line-done':'line-wait'):'line-wait'}"></div>`);
+    nodes.push(`<div class="stop-node"><div class="stop-dot ${dotc}"></div><div class="stop-lbl ${s.status==="active"?'active':''}">${s.stopNumber}</div></div>`);
+  });
+  nodes.push(`<div class="stop-line ${o.progress===100?'line-done':'line-wait'}"></div>`);
+  nodes.push(`<div class="stop-node"><div class="stop-dot ${o.progress===100?'dot-done':'dot-wait'}"></div><div class="stop-lbl">เสร็จ</div></div>`);
+
+  // stop cards
+  const stopCards = o.stops.map(s=>{
+    const ncClass = s.status==="done"?"nc-done":s.status==="active"?"nc-active":"nc-wait";
+    let badge;
+    if(s.status==="done") badge=`<span class="badge b-green"><i class="ti ti-circle-check"></i> ส่งสำเร็จ</span>`;
+    else if(s.status==="active") badge=`<span class="badge b-blue"><i class="ti ti-truck"></i> กำลังส่ง</span>`;
+    else badge=`<span class="badge b-gray"><i class="ti ti-clock"></i> รอ</span>`;
+
+    let info;
+    if(s.status==="done"){
+      info=`<div class="info-item"><div class="label">ถึงร้าน</div><div class="value">${s.arrivalTime}</div></div>
+            <div class="info-item"><div class="label">ส่งสำเร็จ</div><div class="value v-green">${s.completedTime}</div></div>
+            <div class="info-item"><div class="label">ผู้รับ</div><div class="value">${s.contact}</div></div>`;
+    } else if(s.status==="active"){
+      info=`<div class="info-item"><div class="label">ETA ถึงร้าน</div><div class="value v-blue">${s.eta}</div></div>
+            <div class="info-item"><div class="label">เหลืออีก</div><div class="value v-blue">${s.distanceKm?'~'+s.distanceKm+' กม.':'—'}</div></div>
+            <div class="info-item"><div class="label">ผู้ติดต่อ</div><div class="value">${s.contact}</div></div>`;
+    } else {
+      info=`<div class="info-item"><div class="label">ETA ประมาณ</div><div class="value v-gray">${s.eta||'—'}</div></div>
+            <div class="info-item"><div class="label">แจ้งล่วงหน้า</div><div class="value v-green">✓ แล้ว</div></div>
+            <div class="info-item"><div class="label">Geofence</div><div class="value v-gray">รอ Trigger</div></div>`;
+    }
+
+    const tl = s.timeline.map((t,i)=>{
+      const last = i===s.timeline.length-1;
+      const dotc = t.status==="done"?"td-done":t.status==="active"?"td-active":"td-wait";
+      const linec = t.status==="done"?"tl-done":"tl-wait";
+      let tag="";
+      if(t.tag==="Geofence") tag=`<span class="geo-tag"><i class="ti ti-circle-dot" style="font-size:9px"></i> Geofence</span>`;
+      if(t.tag==="ล่าช้า") tag=`<span class="geo-tag tag-late"><i class="ti ti-clock-exclamation" style="font-size:9px"></i> ล่าช้า</span>`;
+      const dim = t.status==="wait"?'style="opacity:.45"':'';
+      const titleColor = t.status==="active"?'style="color:var(--blue)"':'';
+      return `<div class="tl-row">
+        <div class="tl-left"><div class="tl-dot ${dotc}"></div>${last?'':`<div class="tl-line ${linec}"></div>`}</div>
+        <div class="tl-content" ${dim}><div class="tl-title" ${titleColor}>${t.text} ${tag}</div>${t.time?`<div class="tl-sub">${t.time}${/\d/.test(t.time)?' น.':''}</div>`:''}</div>
+      </div>`;
+    }).join("");
+
+    return `<div class="stop-card">
+      <div class="stop-header">
+        <div class="stop-num"><div class="num-circle ${ncClass}">${s.stopNumber}</div>
+          <div><div class="stop-name-txt">${s.name}</div><div class="stop-addr">${s.address}</div></div>
+        </div>${badge}
+      </div>
+      <div class="stop-body">
+        <div class="info-grid">${info}</div>
+        <div class="divider"></div>
+        <div class="tl">${tl}</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  const notifs = o.notifications.map(n=>`<div class="notif-row">
+    <div class="notif-icon">${n.icon}</div>
+    <div class="notif-text"><div class="t">${n.text}</div><div class="s">${n.channel} · ${n.time}${/\d/.test(n.time)?' น.':''}</div></div>
+    <div class="notif-time">${n.time}</div>
+  </div>`).join("");
+
+  return `<div class="top-bar">
+    <button class="back-btn" onclick="go('dashboard')"><i class="ti ti-arrow-left"></i> กลับ Dashboard</button>
+    <div class="top-actions">
+      <button class="btn" onclick="go('track','${o.id}')"><i class="ti ti-eye"></i> มุมมองลูกค้า</button>
+      ${hasPOD?`<button class="btn btn-teal" onclick="go('pod','${o.id}')"><i class="ti ti-file-check"></i> ดู POD</button>`:''}
+    </div>
+  </div>
+  <div class="content">
+    <div class="order-header">
+      <div>
+        <div class="order-title">Order #${o.id}</div>
+        <div class="order-meta">
+          <div class="meta-item"><i class="ti ti-calendar"></i> ${o.date}</div>
+          <div class="meta-item"><i class="ti ti-map-pin"></i> ${o.totalStops} Stop</div>
+          <div class="meta-item"><i class="ti ti-user"></i> ${o.driver.name}</div>
+        </div>
+      </div>
+      <span class="badge ${codeToBadge[o.statusCode]}"><i class="ti ${codeToIcon[o.statusCode]}"></i> ${o.status}${o.statusCode==="active"?` · Stop ${o.currentStop}/${o.totalStops}`:''}</span>
+    </div>
+
+    <div class="summary-bar">${sumItems.join("")}</div>
+
+    <div class="driver-card">
+      <div class="dc-head"><i class="ti ti-user"></i> คนขับและรถ</div>
+      <div class="dc-body">
+        <div class="d-avatar">${o.driver.avatar}</div>
+        <div class="d-info">
+          <div class="d-name">${o.driver.name} <span style="font-weight:400;color:var(--text-secondary);font-size:12px">· ประสบการณ์ ${o.driver.experience}</span></div>
+          <div class="d-tags">
+            <span class="tag tag-plate"><i class="ti ti-car"></i> ${o.driver.plate}</span>
+            <span class="tag tag-phone"><i class="ti ti-phone"></i> ${o.driver.phone}</span>
+          </div>
+        </div>
+        <div class="d-actions">
+          <button class="btn btn-teal"><i class="ti ti-phone"></i> โทร</button>
+          <button class="btn"><i class="ti ti-message"></i> แชท</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-label"><span>ความคืบหน้า</span><span>${o.statusCode==="active"?`Stop ${o.currentStop} / ${o.totalStops}`:`${o.progress}%`}</span></div>
+      <div class="stop-bar">${nodes.join("")}</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title"><i class="ti ti-list-details"></i> รายละเอียดแต่ละ Stop</div>
+      ${stopCards}
+    </div>
+
+    <div class="section">
+      <div class="sec-title"><i class="ti ti-bell"></i> ประวัติการแจ้งเตือนลูกค้า</div>
+      <div class="privacy-note"><i class="ti ti-lock"></i> ลูกค้าแต่ละร้านเห็นเฉพาะการแจ้งเตือนของร้านตัวเองเท่านั้น</div>
+      <div class="notif-log">${notifs}</div>
+    </div>
+  </div>`;
+}
+
+/* ════════════════ POD ════════════════ */
+function renderPOD(){
+  const o = getOrder(state.orderId); if(!o) return renderDashboard();
+  const done = o.stops.filter(s=>s.pod);
+  const totalKm = "42"; // mock summary
+  const sumItems = [`<div class="sum-item"><div class="sum-label">ออกจากคลัง</div><div class="sum-value">${o.departTime||'—'}</div></div>`];
+  done.forEach(s=> sumItems.push(`<div class="sum-item"><div class="sum-label">Stop ${s.stopNumber}</div><div class="sum-value" style="color:var(--green)">✓ ${s.completedTime}</div></div>`));
+  sumItems.push(`<div class="sum-item"><div class="sum-label">ระยะทางรวม</div><div class="sum-value">~${totalKm} กม.</div></div>`);
+
+  const cards = done.map(s=>{
+    const photos = Array.from({length:s.pod.photos}).map((_,i)=>`<div class="photo-ph"><i class="ti ti-photo"></i> รูป ${i+1}</div>`).join("");
+    const verify = s.pod.verification==="OTP"
+      ? `<div class="verify-box otp"><div class="verify-ico"><i class="ti ti-shield-check"></i></div><div><div class="vt">ยืนยันด้วย OTP 6 หลัก</div><div class="vs">ลูกค้ายืนยันเวลา ${s.pod.verifiedAt} น.</div></div></div>`
+      : `<div class="verify-box"><div class="verify-ico"><i class="ti ti-signature"></i></div><div><div class="vt">ยืนยันด้วยลายเซ็น</div><div class="vs">ลูกค้าลงลายเซ็นเวลา ${s.pod.verifiedAt} น.</div></div></div>`;
+    return `<div class="pod-card">
+      <div class="stop-header">
+        <div class="stop-num"><div class="num-circle nc-done">${s.stopNumber}</div>
+          <div><div class="stop-name-txt">${s.name}</div><div class="stop-addr">${s.address}</div></div></div>
+        <span class="badge b-green"><i class="ti ti-circle-check"></i> ส่งสำเร็จ</span>
+      </div>
+      <div class="stop-body">
+        <div class="info-grid">
+          <div class="info-item"><div class="label">ถึงร้าน</div><div class="value">${s.arrivalTime}</div></div>
+          <div class="info-item"><div class="label">ส่งสำเร็จ</div><div class="value v-green">${s.completedTime}</div></div>
+          <div class="info-item"><div class="label">ผู้รับ</div><div class="value">${s.contact}</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px">รูปถ่าย POD (${s.pod.photos} รูป)</div>
+        <div class="photo-grid">${photos}</div>
+        ${verify}
+      </div>
+    </div>`;
+  }).join("");
+
+  return `<div class="top-bar">
+    <button class="back-btn" onclick="go('detail','${o.id}')"><i class="ti ti-arrow-left"></i> กลับ Order #${o.id}</button>
+    <div class="top-actions">
+      <button class="btn"><i class="ti ti-download"></i> ดาวน์โหลด PDF</button>
+      <button class="btn btn-green"><i class="ti ti-send"></i> ส่งให้ลูกค้า</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="order-header">
+      <div>
+        <div class="order-title"><i class="ti ti-file-check" style="color:var(--green)"></i> POD · Order #${o.id}</div>
+        <div class="order-meta">
+          <div class="meta-item"><i class="ti ti-user"></i> ${o.driver.name}</div>
+          <div class="meta-item"><i class="ti ti-calendar"></i> ${o.date}</div>
+          <div class="meta-item"><i class="ti ti-map-pin"></i> ${done.length} Stop สำเร็จ</div>
+        </div>
+      </div>
+      <span class="badge b-green"><i class="ti ti-circle-check"></i> หลักฐานครบถ้วน</span>
+    </div>
+    <div class="summary-bar">${sumItems.join("")}</div>
+    <div class="section" style="margin-top:18px">
+      <div class="sec-title"><i class="ti ti-camera"></i> หลักฐานการส่งแต่ละ Stop</div>
+      ${cards}
+    </div>
+  </div>`;
+}
+
+/* ════════════════ CUSTOMER TRACKING (privacy enforced) ════════════════ */
+function renderTrack(){
+  const o = getOrder(state.orderId); if(!o) return renderDashboard();
+  // pick THIS customer's stop only — never expose others
+  let s = activeStop(o) || o.stops.find(x=>x.status==="waiting") || o.stops[o.stops.length-1];
+  const eta = s.eta || "—";
+  const km = s.distanceKm ? s.distanceKm+" กม." : "กำลังคำนวณ";
+
+  // generic 4-step status, NO stop numbers
+  const steps=[
+    {t:"รับออร์เดอร์แล้ว", s:"ยืนยันการจัดส่ง", st: o.statusCode==="pending"?"done":"done"},
+    {t:"สินค้าออกจากคลัง", s:o.departTime?o.departTime+" น.":"กำลังเตรียม", st: o.departTime?"done":"wait"},
+    {t:"กำลังจัดส่งมาที่ร้านคุณ", s:o.departTime?`คาดถึง ${eta} น.`:"รอรถออก", st: (o.departTime && o.statusCode!=="done")?"active":(o.statusCode==="done"?"done":"wait")},
+    {t:"ส่งสำเร็จ", s: o.statusCode==="done"?"รับของเรียบร้อย":"รอส่งของ", st: o.statusCode==="done"?"done":"wait"}
+  ];
+  const stepHtml = steps.map((x,i)=>{
+    const last=i===steps.length-1;
+    const dotc = x.st==="done"?"sd-done":x.st==="active"?"sd-active":"sd-wait";
+    const ico = x.st==="done"?"ti-check":x.st==="active"?"ti-truck":"ti-circle";
+    const linec = x.st==="done"?"sl-done":"sl-wait";
+    return `<div class="step-row">
+      <div class="step-l"><div class="step-dot ${dotc}"><i class="ti ${ico}"></i></div>${last?'':`<div class="step-line ${linec}"></div>`}</div>
+      <div class="step-c ${x.st}"><div class="t">${x.t}</div><div class="s">${x.s}</div></div>
+    </div>`;
+  }).join("");
+
+  const showLive = o.departTime && o.statusCode!=="done";
+
+  return `<div class="top-bar">
+    <button class="back-btn" onclick="go('detail','${o.id}')"><i class="ti ti-arrow-left"></i> มุมมอง Ops</button>
+    <div class="top-actions"><span class="badge b-gray"><i class="ti ti-lock"></i> หน้าที่ลูกค้า "${s.name}" เห็น</span></div>
+  </div>
+  <div class="track-wrap">
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">ติดตามสินค้า · ร้านของคุณ</div>
+    <div style="font-size:17px;font-weight:700;margin-bottom:14px">${s.name}</div>
+
+    <div class="track-map">
+      <div class="map-grid"></div>
+      ${showLive?`<div class="live-badge"><span class="live-dot"></span> LIVE</div>`:''}
+      <div class="map-route"></div>
+      <div class="map-truck"><i class="ti ti-truck-delivery"></i></div>
+      <div class="map-pin"><div class="pin"><i class="ti ti-building-store"></i></div><div class="pin-lbl">ร้านของคุณ</div></div>
+    </div>
+
+    <div class="eta-big">
+      <div class="lbl">${o.statusCode==="done"?"ส่งสำเร็จแล้ว":"คาดว่าถึงร้านเวลา"}</div>
+      <div class="num">${o.statusCode==="done"?"✓":eta}</div>
+      <div class="sub">${o.statusCode==="done"?"ขอบคุณที่ใช้บริการ":`ระยะทางถึงร้าน · ${km}`}</div>
+    </div>
+
+    ${showLive?`<div class="track-banner"><i class="ti ti-bell-ringing"></i> ระบบจะแจ้งเตือนคุณอีกครั้งเมื่อรถเข้าใกล้ในระยะ 10 กม.</div>`:''}
+
+    <div class="driver-card">
+      <div class="dc-head"><i class="ti ti-steering-wheel"></i> คนขับที่นำส่งให้คุณ</div>
+      <div class="dc-body">
+        <div class="d-avatar">${o.driver.avatar}</div>
+        <div class="d-info">
+          <div class="d-name">${o.driver.name}</div>
+          <div class="d-tags">
+            <span class="tag tag-plate"><i class="ti ti-car"></i> ${o.driver.plate}</span>
+            <span class="tag tag-phone"><i class="ti ti-phone"></i> ${o.driver.phone}</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 16px 14px;display:flex;gap:8px">
+        <button class="btn btn-teal" style="flex:1;justify-content:center"><i class="ti ti-phone"></i> โทร</button>
+        <button class="btn" style="flex:1;justify-content:center"><i class="ti ti-message"></i> แชท</button>
+        <button class="btn" style="flex:1;justify-content:center"><i class="ti ti-headset"></i> ติดต่อ Ops</button>
+      </div>
+    </div>
+
+    <div class="card" style="padding:16px;margin-top:14px">
+      <div class="sec-title" style="margin-bottom:14px"><i class="ti ti-timeline-event"></i> สถานะการจัดส่ง</div>
+      <div class="steps">${stepHtml}</div>
+    </div>
+
+    <div class="privacy-note" style="margin-top:14px"><i class="ti ti-shield-lock"></i> ความเป็นส่วนตัว: คุณเห็นเฉพาะรถและร้านของคุณ ระบบไม่แสดงร้านอื่นหรือลำดับ Stop ในเส้นทาง</div>
+  </div>`;
+}
+
+/* ════════════════ DRIVER APP ════════════════ */
+function renderDriver(){
+  const o = mockOrders[0]; // A2024
+  const n = state.driverScreen;
+  let title, pill, body, foot;
+
+  if(n===1){
+    title="รับงานวันนี้"; pill="1 / 5";
+    body=`<div class="ph-greet">สวัสดี, คุณสมชาย 👋</div>
+      <div class="ph-sub">วันนี้คุณมีงานส่ง 1 ออร์เดอร์ · ${o.totalStops} จุด</div>
+      <div class="ph-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <b style="font-size:16px">Order #${o.id}</b><span class="badge b-blue">${o.totalStops} Stop</span>
+        </div>
+        <div class="ph-stop"><div class="n">1</div><div><div style="font-weight:600">${o.stops[0].name}</div><div style="font-size:12px;color:var(--text-secondary)">${o.stops[0].address}</div></div></div>
+        <div class="ph-stop"><div class="n">2</div><div><div style="font-weight:600">${o.stops[1].name}</div><div style="font-size:12px;color:var(--text-secondary)">${o.stops[1].address}</div></div></div>
+        <div class="ph-stop"><div class="n">3</div><div><div style="font-weight:600">${o.stops[2].name}</div><div style="font-size:12px;color:var(--text-secondary)">${o.stops[2].address}</div></div></div>
+      </div>`;
+    foot=`<button class="btn btn-blue" onclick="driverNav(2)">ดูรายละเอียด <i class="ti ti-chevron-right"></i></button>`;
+  }
+  else if(n===2){
+    title="เช็กของก่อนออก"; pill="2 / 5";
+    body=`<div class="ph-sub">ถ่ายรูปสินค้าก่อนออกจากคลัง</div>
+      <div class="ph-photo-grid" style="margin-bottom:16px">
+        <div class="ph-photo pp-done"><i class="ti ti-photo-check"></i></div>
+        <div class="ph-photo pp-done"><i class="ti ti-photo-check"></i></div>
+        <div class="ph-photo pp-add"><i class="ti ti-camera-plus"></i></div>
+      </div>
+      <div class="ph-card">
+        <div style="font-weight:700;margin-bottom:8px">ลำดับการส่ง (Ops กำหนด)</div>
+        <div class="ph-stop"><div class="n">1</div><div style="font-weight:600">${o.stops[0].name}</div></div>
+        <div class="ph-stop"><div class="n">2</div><div style="font-weight:600">${o.stops[1].name}</div></div>
+        <div class="ph-stop"><div class="n">3</div><div style="font-weight:600">${o.stops[2].name}</div></div>
+      </div>`;
+    foot=`<button class="btn" onclick="driverNav(1)"><i class="ti ti-chevron-left"></i></button>
+          <button class="btn btn-green" onclick="driverNav(3)">ยืนยันออกจากคลัง</button>`;
+  }
+  else if(n===3){
+    const as=o.stops[1];
+    title="ระหว่างทาง"; pill="3 / 5";
+    body=`<div class="ph-mini-map">
+        <div class="map-grid"></div>
+        <div class="map-route" style="top:60%"></div>
+        <div class="map-truck" style="left:14%;top:62%;width:32px;height:32px;font-size:15px"><i class="ti ti-truck-delivery"></i></div>
+        <div class="map-pin" style="right:20%;top:18%"><div class="pin" style="width:28px;height:28px"><i class="ti ti-building-store" style="font-size:13px"></i></div></div>
+      </div>
+      <div class="ph-eta">
+        <div class="e"><div class="l">ETA ถึงร้าน</div><div class="v">${as.eta}</div></div>
+        <div class="e"><div class="l">เหลืออีก</div><div class="v">~${as.distanceKm} กม.</div></div>
+      </div>
+      <div class="ph-card">
+        <div style="font-size:12px;color:var(--text-secondary)">กำลังไป Stop 2</div>
+        <div style="font-weight:700;font-size:15px">${as.name}</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">${as.address}</div>
+        <div style="font-size:12px;margin-top:6px">ผู้ติดต่อ: ${as.contact}</div>
+      </div>`;
+    foot=`<button class="btn btn-blue" style="flex:1.4"><i class="ti ti-navigation"></i> นำทาง</button>
+          <button class="btn"><i class="ti ti-phone"></i></button>
+          <button class="btn btn-red-o" onclick="driverNav(4)"><i class="ti ti-alert-triangle"></i> ส่งของ</button>`;
+  }
+  else if(n===4){
+    title="ส่งของ + POD"; pill="4 / 5";
+    body=`<div class="ph-sub">ถ่ายรูปหลักฐานการส่ง (สูงสุด 3 รูป)</div>
+      <div class="ph-photo-grid" style="margin-bottom:16px">
+        <div class="ph-photo pp-done"><i class="ti ti-photo-check"></i></div>
+        <div class="ph-photo pp-done"><i class="ti ti-photo-check"></i></div>
+        <div class="ph-photo pp-done"><i class="ti ti-photo-check"></i></div>
+      </div>
+      <div class="otp-box"><div class="lbl">รหัส OTP ยืนยันการรับของ</div><div class="code">482193</div></div>`;
+    foot=`<button class="btn btn-red-o" onclick="driverNav(3)">ข้าม Stop นี้</button>
+          <button class="btn btn-green" onclick="driverNav(5)">ปิด Stop นี้</button>`;
+  }
+  else {
+    title="ปิดงาน"; pill="5 / 5";
+    body=`<div class="ph-card" style="text-align:center;padding:22px">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--green-bg);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 10px"><i class="ti ti-circle-check"></i></div>
+        <div style="font-weight:700;font-size:16px">ส่งครบทุก Stop แล้ว</div>
+        <div style="font-size:13px;color:var(--text-secondary)">Order #${o.id}</div>
+      </div>
+      <div class="ph-card">
+        <div class="ph-stop"><div class="n" style="background:var(--green-bg);color:var(--green);border-color:#9FCF7A"><i class="ti ti-check"></i></div><div style="flex:1"><div style="font-weight:600">${o.stops[0].name}</div></div><div style="font-size:12px;color:var(--green)">11:05</div></div>
+        <div class="ph-stop"><div class="n" style="background:var(--green-bg);color:var(--green);border-color:#9FCF7A"><i class="ti ti-check"></i></div><div style="flex:1"><div style="font-weight:600">${o.stops[1].name}</div></div><div style="font-size:12px;color:var(--green)">14:48</div></div>
+        <div class="ph-stop"><div class="n" style="background:var(--green-bg);color:var(--green);border-color:#9FCF7A"><i class="ti ti-check"></i></div><div style="flex:1"><div style="font-weight:600">${o.stops[2].name}</div></div><div style="font-size:12px;color:var(--green)">16:12</div></div>
+      </div>
+      <div class="ph-eta">
+        <div class="e"><div class="l">เวลารวม</div><div class="v">7 ชม.</div></div>
+        <div class="e"><div class="l">ระยะทาง</div><div class="v">42 กม.</div></div>
+      </div>`;
+    foot=`<button class="btn" onclick="driverNav(1)"><i class="ti ti-refresh"></i> เริ่มใหม่</button>
+          <button class="btn btn-green">ปิดงานทั้งหมด</button>`;
+  }
+
+  return `<div class="driver-stage">
+    <div class="info-callout" style="max-width:390px"><i class="ti ti-info-circle"></i> แอปคนขับ — กดปุ่ม Next/Back เพื่อดูทั้ง 5 ขั้นตอน ตั้งแต่รับงานจนปิดงาน</div>
+    <div class="phone">
+      <div class="phone-screen">
+        <div class="ph-status"><span>9:41</span><span><i class="ti ti-signal-4g"></i> <i class="ti ti-wifi"></i> <i class="ti ti-battery-3"></i></span></div>
+        <div class="ph-top"><div class="title">${title}</div><div class="step-pill">${pill}</div></div>
+        <div class="ph-body">${body}</div>
+        <div class="ph-foot">${foot}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ════════════════ MASTER RENDER ════════════════ */
+function render(){
+  let html;
+  switch(state.view){
+    case "dashboard": html=renderDashboard(); break;
+    case "detail": html=renderDetail(); break;
+    case "pod": html=renderPOD(); break;
+    case "track": html=renderTrack(); break;
+    case "driver": html=renderDriver(); break;
+    default: html=renderDashboard();
+  }
+  document.getElementById("app").innerHTML = html;
+  setNavActive();
+}
+render();
+</script>
+</body>
+</html>
